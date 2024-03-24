@@ -1,0 +1,99 @@
+@Library('ot-shared-library') _
+
+pipeline {
+    agent any
+    
+    tools {
+        maven "MAVEN3"
+    }
+    
+    parameters {
+        booleanParam(name: 'SKIP_TEST', defaultValue: false, description: 'Skip test stage')
+        booleanParam(name: 'SKIP_DEPENDENCY_CHECK', defaultValue: false, description: 'Skip dependency-check stage')
+        booleanParam(name: 'SKIP_BUG_ANALYSIS', defaultValue: false, description: 'Skip bug analysis stage')
+        booleanParam(name: 'SKIP_CREDENTIAL_SCANNING', defaultValue: false, description: 'Skip bug analysis stage')
+    }
+
+    stages {
+
+        stage('Credentials scanning') {
+
+            when {
+                expression { params.SKIP_CREDENTIAL_SCANNING == false }
+            }
+
+            steps {
+                credentialScanning()
+            }
+        }
+
+        stage('Test') {
+
+            when {
+                expression { params.SKIP_TEST == false }
+            }
+            
+            steps {
+                javaTest()
+            }
+        }
+
+        stage('Dependency scanning') {
+
+            when {
+                expression { params.SKIP_DEPENDENCY_CHECK == false }
+            }
+            
+            steps {
+                script {
+                    def currentWorkspace = pwd()
+                    javaDependencyScannig(project: "salary-api", scan: "${currentWorkspace}", tool: "DP-Check")
+                }
+            }
+        }
+
+        stage("Bug Analysis ") {
+
+            when {
+                expression { params.SKIP_BUG_ANALYSIS == false }
+            }
+
+            steps {
+                javaBugAnalysis()
+            }
+        }
+
+        stage("SonarQube analysis") {
+            steps {
+                withSonarQubeEnv(installationName: 'sonarqube-9.9', credentialsId: 'sonarqube') {
+                sh '''
+                    mvn verify sonar:sonar \
+                        -Dsonar.projectKey=salary-api
+                '''
+                }
+            }
+        }
+
+        stage("Quality gate") {
+            steps {
+                qualityGate()
+            }
+        }
+
+        stage('Publish HTML Report') {
+            
+            steps {
+                script {
+                    publishHTML([
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'target/site',
+                        reportFiles: 'spotbugs.html',
+                        reportName: 'SpotBugs Report'
+                    ])
+                }
+            }
+        }
+    }
+}

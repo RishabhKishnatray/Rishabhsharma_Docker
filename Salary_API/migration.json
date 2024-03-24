@@ -1,0 +1,3 @@
+{
+  "database": "cassandra://${SCYLLADB_URL}/employee_salary?username=${SCYLLADB_USERNAME}&password=${SCYLLADB_PASSWORD}"
+}
