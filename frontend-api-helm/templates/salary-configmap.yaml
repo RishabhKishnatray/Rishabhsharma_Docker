@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespaces }}
+  name: {{ include "frontend-api-helm.name" . }}-configmap
+  labels:
+    app: frontend
+data:
+   salary-url: {{ .Values.salaryUrl }}
+   employee-url: {{ .Values.employeeUrl }}
+
