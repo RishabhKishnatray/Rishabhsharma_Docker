@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "employee-api-helm.name" . }}-configmap
+data:
+  config.yaml: |-
+    scylladb:
+      host: ["scylladb-svc:9042"]
+      username: scylladb
+      password: password
+      keyspace: employee_db
+
+    redis:
+      enabled: true
+      host: redis-svc:6379
+      password: password
+      database: 0
+
