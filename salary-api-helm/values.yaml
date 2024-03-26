@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: rishabhsharmaip/salary
+  repository: salary
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "2"
